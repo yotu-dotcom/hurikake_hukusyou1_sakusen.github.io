@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>戦略検索</title>
 <style>
 body {
@@ -30,7 +31,24 @@ main {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
+    
 }
+
+@media (max-width: 768px) {
+    .search-box {
+        flex-direction: column;
+    }
+
+    select {
+        font-size: 16px;
+    }
+
+    button {
+        width: 100%;
+        font-size: 16px;
+    }
+}
+
 
 .select-group {
     display: flex;
@@ -206,6 +224,31 @@ const strategies = [
         name:"月忍",
         passive: "勇者、血刃（火力）",
         active: ["全デ", "壺", "諸刃", "契り"]
+    }
+]
+
+    },
+    {
+        id: 3,
+        title: "入定以外　一致",
+        fields: ["鴉","暗獄","炎"],
+        tags: ["一致"],
+        ban: ["手品", "カード禁止", "諸刃"],
+        deck: [
+    {
+        name:"ウォーター",
+        passive: "-",
+        active: ["シェア", "無収穫", "全デ", "壺"]
+    },
+    {
+        name:"Maoki",
+        passive: "-",
+        active: ["全デ", "壺", "浄化", "お魚手裏剣"]
+    },
+    {
+        name:"月忍",
+        passive: "-",
+        active: ["全デ", "壺", "浄化", "お魚手裏剣"]
     }
 ]
 
