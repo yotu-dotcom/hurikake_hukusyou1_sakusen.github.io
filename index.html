@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>戦略検索</title>
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: #1e1f22;
+    color: #ddd;
+}
+
+header {
+    padding: 16px;
+    background: #2b2d31;
+    font-size: 20px;
+}
+
+main {
+    padding: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* 検索 */
+.search-box {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+select {
+    background: #313338;
+    color: #ddd;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+button {
+    background: #5865f2;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #4752c4;
+}
+
+/* 一覧 */
+.result-list {
+    margin-top: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    background: #2b2d31;
+    padding: 16px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.passive {
+    color: #f6c177;
+    font-weight: bold;
+}
+
+
+.card h3 {
+    margin: 0 0 8px 0;
+}
+
+.tags {
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* 詳細 */
+.detail-section {
+    margin-bottom: 20px;
+}
+
+.detail-section h2 {
+    border-bottom: 1px solid #444;
+    padding-bottom: 4px;
+}
+</style>
+</head>
+<body>
+
+<header>戦略検索ツール</header>
+
+<main>
+    <!-- 検索ページ -->
+    <div id="searchPage">
+        <div class="search-box">
+            <div class="select-group">
+                <label>戦場タグ</label>
+                <select id="fieldTag" multiple size="3">
+                    <option value="鴉">鴉</option>
+                    <option value="暗獄">暗獄</option>
+                    <option value="炎">炎</option>
+                </select>
+            </div>
+
+            <div class="select-group">
+                <label>特性タグ</label>
+                <select id="effectTag" multiple size="6">
+                    <option>火弱</option><option>水弱</option><option>雷弱</option><option>風弱</option>
+                    <option>急所</option><option>焦燥</option><option>封印</option><option>混乱</option>
+                    <option>過負荷</option><option>窃盗</option><option>独行</option><option>呪盾</option>
+                    <option>鏡像</option><option>魑魅</option><option>幸運</option><option>特売</option>
+                    <option>一致</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="search()">検索</button>
+
+        <div class="result-list" id="resultList"></div>
+    </div>
+
+    <!-- 詳細ページ -->
+    <div id="detailPage" class="hidden">
+        <button onclick="back()">← 戻る</button>
+        <h1 id="detailTitle"></h1>
+
+        <div class="detail-section">
+            <h2>可能な戦場</h2>
+            <div id="detailField"></div>
+        </div>
+
+        <div class="detail-section">
+            <h2>Banカード</h2>
+            <div id="detailBan"></div>
+        </div>
+
+        <div class="detail-section">
+            <h2>カード構成</h2>
+            <div id="detailDeck"></div>
+        </div>
+    </div>
+</main>
+
+<script>
+const fieldOrder = ["鴉", "暗獄", "炎"];
+
+const strategies = [
+    {
+        id: 1,
+        title: "鴉速攻",
+        fields: ["鴉"],
+        tags: ["火弱", "水弱","雷弱","風弱","急所","焦燥","過負荷","窃盗","独行","呪盾","魑魅","幸運","特売"],
+        ban: ["カード禁止", "忍気流失", "呪詛盾"],
+        deck: [
+    {
+        name:"ウォーター",
+        passive: "入定",
+        active: ["シェア", "付与 or 全武装", "壺", "浄化 or 諸刃"]
+    },
+    {
+        name:"Maoki",
+        passive: "勇者",
+        active: ["浄化", "手品", "諸刃", "契り or 壺"]
+    },
+    {
+        name:"月忍",
+        passive: "勇者",
+        active: ["浄化", "手品", "諸刃", "契り or 壺"]
+    }
+]
+
+    },
+    {
+        id: 2,
+        title: "シェアあり基本系",
+        fields: ["鴉","暗獄","炎"],
+        tags: ["火弱", "水弱","雷弱","風弱","急所","焦燥","呪盾","魑魅"],
+        ban: ["手品", "カード禁止", "全呪詛"],
+        deck: [
+    {
+        name:"ウォーター",
+        passive: "入定",
+        active: ["シェア", "無収穫", "諸刃", "契り or 壺"]
+    },
+    {
+        name:"Maoki",
+        passive: "勇者、血刃（火力）",
+        active: ["全デ", "壺", "諸刃", "契り"]
+    },
+    {
+        name:"月忍",
+        passive: "勇者、血刃（火力）",
+        active: ["全デ", "壺", "諸刃", "契り"]
+    }
+]
+
+    }
+];
+
+function search() {
+    const field = [...document.getElementById("fieldTag").selectedOptions].map(o => o.value);
+    const effect = [...document.getElementById("effectTag").selectedOptions].map(o => o.value);
+
+   const results = strategies
+    .filter(s =>
+        field.every(f => s.fields.includes(f)) &&
+        effect.every(e => s.tags.includes(e))
+    )
+    .sort((a, b) => {
+        const aIndex = fieldOrder.findIndex(f => a.fields.includes(f));
+        const bIndex = fieldOrder.findIndex(f => b.fields.includes(f));
+
+        return aIndex - bIndex;
+    });
+
+
+    const list = document.getElementById("resultList");
+    list.innerHTML = "";
+
+    results.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+            <h3>${s.title}</h3>
+            <div class="tags">${s.fields.join(" / ")} | ${s.tags.join(", ")}</div>
+        `;
+        div.onclick = () => showDetail(s);
+        list.appendChild(div);
+    });
+}
+
+function showDetail(s) {
+    document.getElementById("searchPage").classList.add("hidden");
+    document.getElementById("detailPage").classList.remove("hidden");
+
+    detailTitle.textContent = s.title;
+    detailField.textContent = s.fields.join(", ");
+    detailBan.textContent = s.ban.join(", ");
+
+    detailDeck.innerHTML = "";
+    s.deck.forEach((player, i) => {
+        detailDeck.innerHTML += `
+            <div style="margin-bottom:12px;">
+                <b>${player.name}さん</b><br>
+                パッシブ：${player.passive}<br>
+                アクティブ：${player.active.join(", ")}
+            </div>
+        `;
+    });
+
+}
+
+function back() {
+    document.getElementById("detailPage").classList.add("hidden");
+    document.getElementById("searchPage").classList.remove("hidden");
+}
+
+search();
+</script>
+</body>
+</html>
